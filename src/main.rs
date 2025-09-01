@@ -10,20 +10,23 @@ fn main() {
     let mut lpcbneeded: u32 = 0;
 
     unsafe {
-        EnumProcesses(lpidprocess.as_mut_ptr(), cb, &mut lpcbneeded).expect("EnumProcesses failed");
-        let num_processes: usize = lpcbneeded as usize / std::mem::size_of::<u32>();
+        EnumProcesses(lpidprocess.as_mut_ptr(), cb, &mut lpcbneeded).expect("EnumProcesses failed")
+    };
+    let num_processes: usize = lpcbneeded as usize / std::mem::size_of::<u32>();
 
-        for pid in lpidprocess.iter().take(num_processes) {
-            let handle: HANDLE =
-                match OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, *pid) {
-                    Ok(h) => h,
-                    Err(_e) => continue,
-                };
+    for pid in lpidprocess.iter().take(num_processes) {
+        let handle: HANDLE = match unsafe {
+            OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, *pid)
+        } {
+            Ok(h) => h,
+            Err(_e) => continue,
+        };
 
-            let mut hmodule: HMODULE = HMODULE::default();
-            let mut cb_needed: u32 = 0;
+        let mut hmodule: HMODULE = HMODULE::default();
+        let mut cb_needed: u32 = 0;
 
-            if EnumProcessModules(
+        if unsafe {
+            EnumProcessModules(
                 handle,
                 &mut hmodule,
                 std::mem::size_of_val(&hmodule) as u32,
@@ -31,22 +34,21 @@ fn main() {
             )
             .ok()
             .is_none()
-            {
-                continue;
-            }
-
-            let mut process_name = [0u16; MAX_PATH as usize];
-
-            let len = GetModuleBaseNameW(handle, Some(hmodule), &mut process_name);
-
-            if len > 0 {
-                let name = String::from_utf16_lossy(&process_name[..len as usize]);
-                println!("Process {} with id: {}", name, pid);
-            }
-
-            CloseHandle(handle).ok();
+        } {
+            continue;
         }
 
-        println!("Number of processes detected: {}", num_processes);
+        let mut process_name = [0u16; MAX_PATH as usize];
+
+        let len = unsafe { GetModuleBaseNameW(handle, Some(hmodule), &mut process_name) };
+
+        if len > 0 {
+            let name = String::from_utf16_lossy(&process_name[..len as usize]);
+            println!("Process {} with id: {}", name, pid);
+        }
+
+        unsafe { CloseHandle(handle).ok() };
     }
+
+    println!("Number of processes detected: {}", num_processes);
 }
