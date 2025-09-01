@@ -25,7 +25,7 @@ fn main() {
 
             println!("Process ID: {}", pid);
 
-            let _ = CloseHandle(handle);
+            CloseHandle(handle).ok();
         }
     }
 }
