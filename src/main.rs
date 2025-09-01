@@ -13,10 +13,6 @@ fn main() {
         println!("Number of processes detected: {}", num_processes);
 
         for &pid in &lpidprocess[..num_processes] {
-            if pid == 0 {
-                continue;
-            }
-
             let handle: HANDLE =
                 match OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid) {
                     Ok(h) => h,
