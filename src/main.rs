@@ -1,4 +1,4 @@
-use windows::Win32::Foundation::{CloseHandle, HANDLE, HMODULE};
+use windows::Win32::Foundation::{CloseHandle, HANDLE, HMODULE, MAX_PATH};
 use windows::Win32::System::ProcessStatus::{
     EnumProcessModules, EnumProcesses, GetModuleBaseNameW,
 };
@@ -35,7 +35,14 @@ fn main() {
                 continue;
             }
 
-            println!("Process ID: {}", pid);
+            let mut process_name = [0u16; MAX_PATH as usize];
+
+            let len = GetModuleBaseNameW(handle, Some(hmodule), &mut process_name);
+
+            if len > 0 {
+                let name = String::from_utf16_lossy(&process_name[..len as usize]);
+                println!("Process {} with id: {}", name, pid);
+            }
 
             CloseHandle(handle).ok();
         }
