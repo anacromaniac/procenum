@@ -1,4 +1,4 @@
-use windows::Win32::Foundation::{CloseHandle, HANDLE};
+use windows::Win32::Foundation::{CloseHandle, HANDLE, HMODULE};
 use windows::Win32::System::ProcessStatus::{
     EnumProcessModules, EnumProcesses, GetModuleBaseNameW,
 };
@@ -19,6 +19,21 @@ fn main() {
                     Ok(h) => h,
                     Err(_e) => continue,
                 };
+
+            let mut hmodule: HMODULE = HMODULE::default();
+            let mut cb_needed: u32 = 0;
+
+            if EnumProcessModules(
+                handle,
+                &mut hmodule,
+                std::mem::size_of_val(&hmodule) as u32,
+                &mut cb_needed,
+            )
+            .ok()
+            .is_none()
+            {
+                continue;
+            }
 
             println!("Process ID: {}", pid);
 
