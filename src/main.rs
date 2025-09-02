@@ -1,3 +1,5 @@
+use std::io::{self, Write};
+
 use windows::Win32::Foundation::{CloseHandle, HANDLE, HMODULE, MAX_PATH};
 use windows::Win32::System::ProcessStatus::{
     EnumProcessModules, EnumProcesses, GetModuleBaseNameW,
@@ -7,16 +9,24 @@ use windows::Win32::System::Threading::{OpenProcess, PROCESS_QUERY_INFORMATION, 
 fn main() {
     list_processes();
 
-    let target_process = "notepad.exe";
+    print!("Enter the process name: ");
+    io::stdout().flush().unwrap();
 
-    match get_remote_process_handle(target_process) {
+    let mut target_name = String::new();
+    io::stdin()
+        .read_line(&mut target_name)
+        .expect("Failed to read line");
+
+    let target_name = target_name.trim();
+
+    match get_remote_process_handle(target_name) {
         Some((handle, pid)) => println!(
             "Found process '{}' with pid {} and handle {:?}",
-            target_process, pid, handle
+            target_name, pid, handle
         ),
         None => println!(
-            "Process {} not found or insufficient permissions",
-            target_process
+            "Process '{}' not found or insufficient permissions",
+            target_name
         ),
     }
 }
