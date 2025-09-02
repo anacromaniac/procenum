@@ -121,7 +121,7 @@ fn get_remote_process_handle(target_process_name: &str) -> Option<(HANDLE, u32)>
         if len > 0 {
             let name = String::from_utf16_lossy(&process_name[..len as usize]);
 
-            if name == target_process_name.to_lowercase() {
+            if name == target_process_name {
                 return Some((handle, *pid));
             }
         }
